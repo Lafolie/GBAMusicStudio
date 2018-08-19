@@ -134,6 +134,7 @@ namespace GBAMusicStudio.UI
             changeVoicesButton.Size = addEventButton.Size = removeEventButton.Size = new Size(95, 25);
             var originalVoiceLabel = new ThemedLabel { Location = new Point(115, 30 + 2 + 3), Text = "From" };
             trackVoiceDetails[0] = new ThemedNumeric { Location = new Point(149, 30 + 2) };
+            trackVoiceDetails[0].Enabled = false;
             var newVoiceIDLabel = new ThemedLabel { Location = new Point(204, 30 + 2 + 3), Text = "To" };
             trackVoiceDetails[1] = new ThemedNumeric { Location = new Point(224, 30 + 2) };
             trackVoiceDetails[0].Maximum = trackVoiceDetails[1].Maximum = 0xFF;
@@ -262,9 +263,10 @@ namespace GBAMusicStudio.UI
         {
             bool changed = false;
             foreach (var ev in events)
-                if (sender == changeVoicesButton && ev.Command is VoiceCommand voice && voice.Voice == trackVoiceDetails[0].Value)
+                if (sender == changeVoicesButton && ev.Command is VoiceCommand voice)// && voice.Voice == trackVoiceDetails[0].Value)
                 {
                     voice.Voice = (byte)trackVoiceDetails[1].Value;
+                    trackVoiceDetails[0].Value = (decimal)voice.Voice; 
                     changed = true;
                 }
             if (changed)
