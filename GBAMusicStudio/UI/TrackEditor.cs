@@ -114,6 +114,7 @@ namespace GBAMusicStudio.UI
                 Location = new Point(13, 30 + 25 + 5 + 25 + 5),
                 Text = "Remove Event"
             };
+
             treButton.Click += RemoveEvent;
             tracksBox.Enabled = tvButton.Enabled = taeButton.Enabled = treButton.Enabled = commandsBox.Enabled = false;
             tvButton.Size = taeButton.Size = treButton.Size = new Size(95, 25);
@@ -126,6 +127,22 @@ namespace GBAMusicStudio.UI
             tvArgs[0].TextAlign = tvArgs[1].TextAlign = HorizontalAlignment.Center;
             tvFrom.AutoSize = tvTo.AutoSize = true;
             panel2.Controls.AddRange(new Control[] { tracksBox, tvButton, tvFrom, tvTo, tvArgs[0], tvArgs[1], taeButton, commandsBox, treButton });
+            removeEventButton.Click += RemoveEvent;
+
+            //Track controls box preparation
+            tracksBox.Enabled = changeVoicesButton.Enabled = addEventButton.Enabled = removeEventButton.Enabled = commandsBox.Enabled = false;
+            changeVoicesButton.Size = addEventButton.Size = removeEventButton.Size = new Size(95, 25);
+            var originalVoiceLabel = new ThemedLabel { Location = new Point(115, 30 + 2 + 3), Text = "From" };
+            trackVoiceDetails[0] = new ThemedNumeric { Location = new Point(149, 30 + 2) };
+            trackVoiceDetails[0].Enabled = false;
+            var newVoiceIDLabel = new ThemedLabel { Location = new Point(204, 30 + 2 + 3), Text = "To" };
+            trackVoiceDetails[1] = new ThemedNumeric { Location = new Point(224, 30 + 2) };
+            trackVoiceDetails[0].Maximum = trackVoiceDetails[1].Maximum = 0xFF;
+            trackVoiceDetails[0].Size = trackVoiceDetails[1].Size = new Size(45, 23);
+            trackVoiceDetails[0].TextAlign = trackVoiceDetails[1].TextAlign = HorizontalAlignment.Center;
+            originalVoiceLabel.AutoSize = newVoiceIDLabel.AutoSize = true;
+
+            trackEditPanel.Controls.AddRange(new Control[] { tracksBox, changeVoicesButton, originalVoiceLabel, newVoiceIDLabel, trackVoiceDetails[0], trackVoiceDetails[1], addEventButton, commandsBox, removeEventButton });
 
             // Global controls
             remapsBox = new ComboBox
@@ -244,6 +261,10 @@ namespace GBAMusicStudio.UI
                 if (sender == tvButton && ev.Command is VoiceCommand voice && voice.Voice == tvArgs[0].Value)
                 {
                     voice.Voice = (byte)tvArgs[1].Value;
+                if (sender == changeVoicesButton && ev.Command is VoiceCommand voice)// && voice.Voice == trackVoiceDetails[0].Value)
+                {
+                    voice.Voice = (byte)trackVoiceDetails[1].Value;
+                    trackVoiceDetails[0].Value = (decimal)voice.Voice; 
                     changed = true;
                 }
             if (changed)
