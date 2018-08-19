@@ -1,4 +1,5 @@
-﻿using GBAMusicStudio.Core;
+﻿using BrightIdeasSoftware;
+using GBAMusicStudio.Core;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,7 +15,7 @@ namespace GBAMusicStudio.UI
         int currentTrack = 0;
         List<SongEvent> events;
 
-        readonly ObjectListView trackEventlistView;
+        readonly ObjectListView trackListView;
         readonly ThemedLabel[] labels = new ThemedLabel[3];
         readonly ThemedNumeric[] args = new ThemedNumeric[3];
 
@@ -37,7 +38,7 @@ namespace GBAMusicStudio.UI
             int paneWidth = 300 - 12 - 6, panelHeight = 400 - 24;
 
             //setup component panels
-            trackEventlistView = new ObjectListView
+            trackListView = new ObjectListView
             {
                 FullRowSelect = true,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
@@ -60,10 +61,10 @@ namespace GBAMusicStudio.UI
             c4.Width = 45;
             c1.Hideable = c2.Hideable = c3.Hideable = c4.Hideable = false;
             c1.TextAlign = c2.TextAlign = c3.TextAlign = c4.TextAlign = HorizontalAlignment.Center;
-            trackEventlistView.AllColumns.AddRange(new OLVColumn[] { c1, c2, c3, c4 });
-            trackEventlistView.RebuildColumns();
-            trackEventlistView.SelectedIndexChanged += SelectedIndexChanged;
-            trackEventlistView.ItemActivate += ListView_ItemActivate;
+            trackListView.AllColumns.AddRange(new OLVColumn[] { c1, c2, c3, c4 });
+            trackListView.RebuildColumns();
+            trackListView.SelectedIndexChanged += SelectedIndexChanged;
+            trackListView.ItemActivate += ListView_ItemActivate;
 
             int h2 = panelHeight / 3 - 4;
             var eventEditPanel = new ThemedPanel { Location = new Point(306, 12), Size = new Size(paneWidth, h2) };
@@ -186,21 +187,21 @@ namespace GBAMusicStudio.UI
             globalEditPanel.Controls.AddRange(new Control[] { globalRemapsBox, globalRemapFromButton, remapToButton, globalChangeVoicesButton, gvFrom, gvTo, gvArgs[0], gvArgs[1] });
 
             //fin
-            Controls.AddRange(new Control[] { trackEventlistView, eventEditPanel, trackEditPanel, globalEditPanel });
+            Controls.AddRange(new Control[] { trackListView, eventEditPanel, trackEditPanel, globalEditPanel });
 
             UpdateTracks();
         }
 
         void ListView_ItemActivate(object sender, EventArgs e)
         {
-            SongPlayer.SetPosition(((SongEvent)trackEventlistView.SelectedItem.RowObject).AbsoluteTicks);
+            SongPlayer.SetPosition(((SongEvent)trackListView.SelectedItem.RowObject).AbsoluteTicks);
         }
 
         void AddEvent(object sender, EventArgs e)
         {
             var cmd = (ICommand)Activator.CreateInstance(Engine.GetCommands()[commandsBox.SelectedIndex].GetType());
             var ev = new SongEvent(0xFFFFFFFF, cmd);
-            int index = trackEventlistView.SelectedIndex + 1;
+            int index = trackListView.SelectedIndex + 1;
             SongPlayer.Song.InsertEvent(ev, currentTrack, index);
             SongPlayer.RefreshSong();
             LoadTrack(currentTrack);
@@ -209,9 +210,9 @@ namespace GBAMusicStudio.UI
 
         void RemoveEvent(object sender, EventArgs e)
         {
-            if (trackEventlistView.SelectedIndex == -1)
+            if (trackListView.SelectedIndex == -1)
                 return;
-            SongPlayer.Song.RemoveEvent(currentTrack, trackEventlistView.SelectedIndex);
+            SongPlayer.Song.RemoveEvent(currentTrack, trackListView.SelectedIndex);
             SongPlayer.RefreshSong();
             LoadTrack(currentTrack);
         }
@@ -294,7 +295,7 @@ namespace GBAMusicStudio.UI
         {
             currentTrack = track;
             events = SongPlayer.Song.Commands[track];
-            trackEventlistView.SetObjects(events);
+            trackListView.SetObjects(events);
             SelectedIndexChanged(null, null);
         }
 
@@ -310,14 +311,14 @@ namespace GBAMusicStudio.UI
             commandsBox.DataSource = Engine.GetCommands().Select(c => c.Name).ToList();
 
             if (!tracks)
-                trackEventlistView.Items.Clear();
+                trackListView.Items.Clear();
         }
 
         void SelectItem(int index)
         {
-            trackEventlistView.Items[index].Selected = true;
-            trackEventlistView.Select();
-            trackEventlistView.EnsureVisible(index);
+            trackListView.Items[index].Selected = true;
+            trackListView.Select();
+            trackListView.EnsureVisible(index);
         }
 
         void ArgumentChanged(object sender, EventArgs e)
@@ -326,7 +327,7 @@ namespace GBAMusicStudio.UI
             {
                 if (sender == args[i])
                 {
-                    var se = events[trackEventlistView.SelectedIndices[0]];
+                    var se = events[trackListView.SelectedIndices[0]];
                     object value = args[i].Value;
                     var m = se.Command.GetType().GetMember(labels[i].Text)[0];
                     if (m is FieldInfo f)
@@ -336,7 +337,7 @@ namespace GBAMusicStudio.UI
                     SongPlayer.RefreshSong();
 
                     var control = ActiveControl;
-                    int index = trackEventlistView.SelectedIndex;
+                    int index = trackListView.SelectedIndex;
                     LoadTrack(currentTrack);
                     SelectItem(index);
                     control.Select();
@@ -348,14 +349,14 @@ namespace GBAMusicStudio.UI
 
         void SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (trackEventlistView.SelectedIndices.Count != 1)
+            if (trackListView.SelectedIndices.Count != 1)
             {
                 labels[0].Visible = labels[1].Visible = labels[2].Visible =
                     args[0].Visible = args[1].Visible = args[2].Visible = false;
             }
             else
             {
-                var se = (SongEvent)trackEventlistView.SelectedObject;
+                var se = (SongEvent)trackListView.SelectedObject;
                 var ignore = typeof(ICommand).GetMembers();
                 var mi = se.Command == null ? new MemberInfo[0] : se.Command.GetType().GetMembers().Where(m => !ignore.Any(a => m.Name == a.Name) && (m is FieldInfo || m is PropertyInfo)).ToArray();
                 for (int i = 0; i < 3; i++)
