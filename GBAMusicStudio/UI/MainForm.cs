@@ -32,7 +32,7 @@ namespace GBAMusicStudio.UI
         readonly object timerLock = new object();
         ThemedNumeric songNumerical, tableNumerical;
         ThemedButton playButton, stopButton, pauseButton;
-        ThemedLabel creatorLabel, gameLabel, codeLabel;
+        ThemedLabel creatorLabel, gameLabel, codeLabel, voiceBankLabel;
         SplitContainer splitContainer;
         PianoControl piano;
         ColorSlider positionBar, volumeBar;
@@ -111,6 +111,7 @@ namespace GBAMusicStudio.UI
             creatorLabel = new ThemedLabel { Location = new Point(3, 43), Size = new Size(72, 13) };
             gameLabel = new ThemedLabel { Location = new Point(3, 30), Size = new Size(66, 13) };
             codeLabel = new ThemedLabel { Location = new Point(3, 56), Size = new Size(63, 13) };
+            
 
             creatorLabel.AutoSize = gameLabel.AutoSize = codeLabel.AutoSize = true;
             creatorLabel.TextAlign = gameLabel.TextAlign = codeLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -133,6 +134,8 @@ namespace GBAMusicStudio.UI
                 Maximum = 0,
                 Size = new Size(sWidth, 27)
             };
+            
+
             positionBar.MouseUp += SetPosition;
             positionBar.MouseDown += (o, e) => drag = true;
             volumeBar = new ColorSlider()
@@ -146,6 +149,16 @@ namespace GBAMusicStudio.UI
             volumeBar.ValueChanged += (o, e) => SoundMixer.MasterVolume = (volumeBar.Value / (float)volumeBar.Maximum);
             volumeBar.Value = Config.Volume; // Update MusicPlayer volume
 
+            // Voice bank label for current song
+            voiceBankLabel = new ThemedLabel
+            {
+                Location = new Point(sX, 28),
+                Text = "Voice Bank: ",
+                Size = new Size(sWidth, 15)
+
+            };
+
+
             // Playlist box
             ImageList il = new ImageList(components)
             {
@@ -154,6 +167,7 @@ namespace GBAMusicStudio.UI
                 TransparentColor = Color.Transparent
             };
             il.Images.AddRange(new Image[] { Resources.PlaylistIcon, Resources.SongIcon });
+
             songsComboBox = new ImageComboBox.ImageComboBox()
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
@@ -184,7 +198,7 @@ namespace GBAMusicStudio.UI
                 SplitterDistance = 125,
                 SplitterWidth = 1
             };
-            splitContainer.Panel1.Controls.AddRange(new Control[] { playButton, creatorLabel, gameLabel, codeLabel, pauseButton, stopButton, songNumerical, tableNumerical, songsComboBox, piano, positionBar, volumeBar });
+            splitContainer.Panel1.Controls.AddRange(new Control[] { playButton, creatorLabel, gameLabel, codeLabel, pauseButton, stopButton, songNumerical, tableNumerical, songsComboBox, piano, positionBar, volumeBar, voiceBankLabel });
             splitContainer.Panel2.Controls.Add(trackInfo);
 
             // MainForm
@@ -364,6 +378,7 @@ namespace GBAMusicStudio.UI
             trackInfo.DeleteData(); // Refresh track count
             UpdateSongPosition(0);
             UpdateTaskbarState();
+            UpdateVoiceBankLabel();
             positionBar.Maximum = SongPlayer.Song.NumTicks;
             positionBar.LargeChange = (uint)(positionBar.Maximum / 10);
             positionBar.SmallChange = positionBar.LargeChange / 4;
@@ -538,6 +553,12 @@ namespace GBAMusicStudio.UI
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void UpdateVoiceBankLabel()
+        {
+            voiceBankLabel.Text = string.Format("Voice bank: 0x{0:X}", SongPlayer.Song.VoiceTable.Offset);
+            //voiceBankLabel.Update();
         }
     }
 }
